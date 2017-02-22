@@ -22,9 +22,10 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
  * asynchronous code.
  */
 @Singleton
-class AsyncController @Inject()(actorSystem: ActorSystem, unicorn: LongUnicornPlayJDBC, gameRepository: GameRepository)(implicit exec:
-ExecutionContext) extends
-  Controller {
+class AsyncController @Inject()(actorSystem: ActorSystem,
+                                unicorn: LongUnicornPlayJDBC,
+                                gameRepository: GameRepository
+                               )(implicit exec: ExecutionContext) extends Controller {
 
   /**
    * Create an Action that returns a plain text message after a delay
@@ -44,9 +45,9 @@ ExecutionContext) extends
     promise.future
   }
 
-  def getGame(gameId: GameId) = Action.async{
+  def getGame(gameId: Long) = Action.async{
     unicorn.db.run(
-      gameRepository.findByGameId(gameId).value
+      gameRepository.findByGameId(GameId(gameId)).value
     ).map(game => Ok(Json.toJson(game)))
   }
 

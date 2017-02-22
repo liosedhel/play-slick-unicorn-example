@@ -34,6 +34,9 @@ trait TeamRepositoryComponent
     override def * : ProvenShape[TeamRow] = (id.?, captain, description) <> (TeamRow.tupled, TeamRow.unapply)
   }
 
+  val teams = TableQuery[TeamsTable]
+
+    teams.schema.createStatements.foreach(println)
 }
 
 @Singleton

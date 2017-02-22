@@ -5,6 +5,9 @@ import javax.inject.Inject
 import org.virtuslab.unicorn._
 import javax.inject.Singleton
 
+import cats.data.OptionT
+import domain.model.User
+import infrastructure.repositories.utils.DbioMonadImplicits
 import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
 import slick.dbio.DBIO
 
@@ -32,15 +35,22 @@ trait UserBaseRepositoryComponent extends UnicornWrapper[Long] {
 
   val UserTable = TableQuery[Users]
 
+  UserTable.schema.createStatements.foreach(println)
+
   class UserBaseIdRepository extends BaseIdRepository[UserId, UserRow, Users](UserTable)
   val userBaseIdRepository = new UserBaseIdRepository
 
 }
 
 @Singleton
-class UsersRepository @Inject() (val unicorn: LongUnicornPlayJDBC) extends UserBaseRepositoryComponent {
+class UsersRepository @Inject() (val unicorn: LongUnicornPlayJDBC) extends UserBaseRepositoryComponent with DbioMonadImplicits{
 
-    def findExistingByUserId(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[UserRow] = {
-      userBaseIdRepository.findExistingById(userId)
+    def findByUserId(userId: UserId): OptionT[DBIO, User] = {
+      OptionT(userBaseIdRepository.findById(userId)).map(toDomain)
+    }
+
+    def toDomain(userRow: UserRow): User = {
+      import userRow._
+      User(userRow.id, firstName)
     }
 }

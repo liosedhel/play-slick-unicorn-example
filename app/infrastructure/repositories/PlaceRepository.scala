@@ -1,6 +1,6 @@
 package infrastructure.repositories
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
 import domain.model.Place
@@ -25,17 +25,19 @@ trait PlaceBaseRepositoryComponent extends UnicornWrapper[Long]{
     def * = (id.?, name) <> (PlaceRow.tupled, PlaceRow.unapply)
   }
 
-  val places = TableQuery[Places]
+  val PlaceTable = TableQuery[Places]
 
-  val baseIdRepository = new BaseIdRepository[PlaceId, PlaceRow, Places](places)
+  PlaceTable.schema.createStatements.foreach(println)
+
+  val placeBaseIdRepository = new BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
 
 }
 
 @Singleton
-class PlaceRepository(val unicorn: LongUnicornPlayJDBC) extends PlaceBaseRepositoryComponent with DbioMonadImplicits {
+class PlaceRepository @Inject()(val unicorn: LongUnicornPlayJDBC) extends PlaceBaseRepositoryComponent with DbioMonadImplicits {
 
   def findByPlaceId(placeId: PlaceId): OptionT[DBIO, Place] = {
-    OptionT(baseIdRepository.findById(placeId)).map(toDomain)
+    OptionT(placeBaseIdRepository.findById(placeId)).map(toDomain)
   }
 
   def toDomain(placeRow: PlaceRow): Place = {

@@ -30,6 +30,8 @@ trait GameUsersRepositoryComponent
 
   val GamesUsersTable = TableQuery[GamesUsers]
 
+  GamesUsersTable.schema.createStatements.foreach(println)
+
   val gamesUsersJunctionRepository = new JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable)
 }
 
