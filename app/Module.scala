@@ -1,7 +1,11 @@
-import com.google.inject.AbstractModule
+import com.google.inject.{AbstractModule, TypeLiteral}
 import java.time.Clock
 
-import services.{ApplicationTimer, AtomicCounter, Counter}
+import infrastructure.repositories.{GamesRepositoryImpl, GamesUsersRepositoryImpl, PlacesRepositoryImpl, UsersRepositoryImpl}
+import org.virtuslab.unicorn.{LongUnicornPlayJDBC, UnicornPlay}
+import domain.services.{ApplicationTimer, AtomicCounter, Counter}
+import domain.services.interfaces.{GamesRepository, GamesUsersRepository, PlaceRepository, UsersRepository}
+import slick.dbio.DBIO
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -23,6 +27,11 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
+    bind(new TypeLiteral[PlaceRepository[DBIO]](){}).to(classOf[PlacesRepositoryImpl])
+    bind(new TypeLiteral[UsersRepository[DBIO]](){}).to(classOf[UsersRepositoryImpl])
+    bind(new TypeLiteral[GamesRepository[DBIO]](){}).to(classOf[GamesRepositoryImpl])
+    bind(new TypeLiteral[GamesUsersRepository[DBIO]](){}).to(classOf[GamesUsersRepositoryImpl])
+    bind(new TypeLiteral[UnicornPlay[Long]](){}).to(classOf[LongUnicornPlayJDBC])
   }
 
 }

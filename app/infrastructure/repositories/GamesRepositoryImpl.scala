@@ -8,6 +8,7 @@ import infrastructure.repositories.utils.DbioMonadImplicits
 import org.joda.time.DateTime
 import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
 import org.virtuslab.unicorn._
+import domain.services.interfaces.{GamesRepository, UsersRepository}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
@@ -18,12 +19,15 @@ object GameId extends IdCompanion[GameId]
 
 case class GameRow(id: Option[GameId], organizerId: UserId, note: String, date: DateTime, placeId: PlaceId) extends WithId[Long, GameId]
 
-trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with PlaceBaseRepositoryComponent {
+trait GamesBaseRepositoryComponent
+  extends UsersBaseRepositoryComponent
+  with PlacesBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
 
-  class Games(tag: Tag) extends IdTable[GameId, GameRow](tag, "games"){
+  class GamesTable(tag: Tag) extends IdTable[GameId, GameRow](tag, "games"){
+
     def organizerId = column[UserId]("organizer_id")
 
     def note = column[String]("note")
@@ -32,26 +36,26 @@ trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with Place
 
     def placeId = column[PlaceId]("place_id")
 
-    def organizer = foreignKey("organizer_fk", organizerId, UserTable)(_.id)
+    def organizer = foreignKey("organizer_fk", organizerId, UsersTable)(_.id)
 
     def place = foreignKey("place_fk", placeId, PlaceTable)(_.id)
 
     override def *  = (id.?, organizerId, note, date, placeId) <> (GameRow.tupled, GameRow.unapply)
   }
 
-  val GamesTable = TableQuery[Games]
+  val GamesTable = TableQuery[GamesTable]
 
   GamesTable.schema.createStatements.foreach(println)
 
-  class GameBaseIdRepository extends BaseIdRepository[GameId, GameRow, Games](GamesTable) {
+  class GameBaseIdRepository extends BaseIdRepository[GameId, GameRow, GamesTable](GamesTable) {
 
     //Just and example how easily you can make join queries
-    def findGameAndOrganizerAndPlace(gameId: GameId): slick.dbio.DBIO[Option[((GameRow, UserRow), PlaceRow)]] = {
-      GamesTable
-        .filter(_.id === gameId)
-        .join(UserTable)
-        .join(PlaceTable)
-        .result.headOption
+    def findGameAndOrganizerAndPlace(gameId: GameId): slick.dbio.DBIO[Option[(GameRow, UserRow, PlaceRow)]] = {
+      (for {
+        game <- GamesTable if game.id === gameId
+        user <- game.organizer
+        place <- game.place
+      } yield (game, user, place)).result.headOption
     }
 
   }
@@ -59,15 +63,16 @@ trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with Place
 }
 
 @Singleton
-class GameRepository @Inject()(val unicorn: LongUnicornPlayJDBC,
-                               usersRepository: UsersRepository,
-                               placeRepository: PlaceRepository)
-    extends GameBaseRepositoryComponent
+class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
+                                    usersRepository: UsersRepository[DBIO],
+                                    placeRepository: PlacesRepositoryImpl)(implicit executionContext: ExecutionContext)
+    extends GamesBaseRepositoryComponent
+    with GamesRepository[DBIO]
     with DbioMonadImplicits {
 
   val gameBaseIdRepository = new GameBaseIdRepository
 
-  def findByGameId(gameId: GameId)(implicit executionContext: ExecutionContext): OptionT[DBIO, Game] = {
+  def findByGameId(gameId: GameId): OptionT[DBIO, Game] = {
     OptionT(gameBaseIdRepository.findById(gameId)).flatMap(toDomain)
 
   }
@@ -79,7 +84,7 @@ class GameRepository @Inject()(val unicorn: LongUnicornPlayJDBC,
   /**
     * Translate Row to the full domain object
     */
-  private def toDomain(gameRow: GameRow)(implicit executionContext: ExecutionContext): OptionT[DBIO, Game] = {
+  private def toDomain(gameRow: GameRow): OptionT[DBIO, Game] = {
     for {
       organizer <- usersRepository.findByUserId(gameRow.organizerId)
       place <- placeRepository.findByPlaceId(gameRow.placeId)

@@ -8,7 +8,8 @@ import javax.inject.Singleton
 import cats.data.OptionT
 import domain.model.User
 import infrastructure.repositories.utils.DbioMonadImplicits
-import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
+import LongUnicornPlayIdentifiers.IdCompanion
+import domain.services.interfaces.UsersRepository
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
@@ -19,13 +20,13 @@ object UserId extends IdCompanion[UserId]
 
 case class UserRow(id: Option[UserId], email: String, firstName: String, lastName: String) extends WithId[Long, UserId]
 
-trait UserBaseRepositoryComponent {
+trait UsersBaseRepositoryComponent {
 
   protected val unicorn: Unicorn[Long] with HasJdbcDriver
   import unicorn._
   import unicorn.driver.api._
 
-  class Users(tag: Tag) extends IdTable[UserId, UserRow](tag, "users") {
+  class UsersTable(tag: Tag) extends IdTable[UserId, UserRow](tag, "users") {
 
     def email = column[String]("email")
     def firstName = column[String]("first_name")
@@ -34,26 +35,30 @@ trait UserBaseRepositoryComponent {
     override def * = (id.?, email, firstName, lastName) <> (UserRow.tupled, UserRow.unapply)
   }
 
-  val UserTable = TableQuery[Users]
+  val UsersTable = TableQuery[UsersTable]
 
-  UserTable.schema.createStatements.foreach(println)
+  UsersTable.schema.createStatements.foreach(println)
 
-  class UserBaseIdRepository extends BaseIdRepository[UserId, UserRow, Users](UserTable)
+  class UsersBaseIdRepository extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
 
 
 }
 
 @Singleton
-class UsersRepository @Inject() (val unicorn: LongUnicornPlayJDBC) extends UserBaseRepositoryComponent with DbioMonadImplicits{
+class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
+                                   (implicit ec: ExecutionContext)
+  extends UsersBaseRepositoryComponent
+  with UsersRepository[DBIO]
+  with DbioMonadImplicits{
 
-  val userBaseIdRepository = new UserBaseIdRepository
+  val userBaseIdRepository = new UsersBaseIdRepository
 
-  def findByUserId(userId: UserId)(implicit executionContext: ExecutionContext): OptionT[DBIO, User] = {
+  def findByUserId(userId: UserId): OptionT[DBIO, User] = {
       OptionT(userBaseIdRepository.findById(userId)).map(toDomain)
     }
 
-  def findExistingByUserId(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[User] = {
-    userBaseIdRepository.findExistingById(userId).map(toDomain _)
+  def findExistingByUserId(userId: UserId): DBIO[User] = {
+    userBaseIdRepository.findExistingById(userId).map(toDomain)
   }
 
   private def toDomain(userRow: UserRow): User = {

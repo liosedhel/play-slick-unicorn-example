@@ -4,7 +4,6 @@ import cats.Monad
 import play.api.libs.concurrent.Execution
 import slick.dbio.DBIO
 
-import scala.collection.generic.CanBuildFrom
 import scala.concurrent.ExecutionContext
 
 trait DbioMonadImplicits extends ActionConversionImplicits {

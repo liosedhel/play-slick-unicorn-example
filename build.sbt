@@ -21,3 +21,13 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.193"
 
 // https://mvnrepository.com/artifact/org.postgresql/postgresql
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212"
+
+// https://mvnrepository.com/artifact/org.scalatest/scalatest_2.11
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
+
+// https://mvnrepository.com/artifact/org.scalamock/scalamock-scalatest-support_2.11
+libraryDependencies += "org.scalamock" % "scalamock-scalatest-support_2.11" % "3.2.2" % Test
+
+
+
+

@@ -4,16 +4,18 @@ import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
 import domain.model.Place
+import domain.services.interfaces.PlaceRepository
 import infrastructure.repositories.utils.DbioMonadImplicits
 import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
 import org.virtuslab.unicorn._
+import slick.dbio.DBIO
 
 case class PlaceId(id: Long) extends BaseId[Long]
 object PlaceId extends IdCompanion[PlaceId]
 
 case class PlaceRow(id: Option[PlaceId], name: String) extends WithId[Long, PlaceId]
 
-trait PlaceBaseRepositoryComponent {
+trait PlacesBaseRepositoryComponent {
 
   protected val unicorn: Unicorn[Long] with HasJdbcDriver
   import unicorn._
@@ -34,13 +36,14 @@ trait PlaceBaseRepositoryComponent {
 }
 
 @Singleton
-class PlaceRepository @Inject()(val unicorn: LongUnicornPlayJDBC)
-    extends PlaceBaseRepositoryComponent
+class PlacesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
+    extends PlaceRepository[DBIO]
+    with PlacesBaseRepositoryComponent
     with DbioMonadImplicits {
 
   val placeBaseIdRepository = new PlaceBaseIdRepository
 
-  def findByPlaceId(placeId: PlaceId): OptionT[slick.dbio.DBIO, Place] = {
+  def findByPlaceId(placeId: PlaceId): OptionT[DBIO, Place] = {
     OptionT(placeBaseIdRepository.findById(placeId)).map(toDomain)
   }
 

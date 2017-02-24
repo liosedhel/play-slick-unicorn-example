@@ -3,14 +3,15 @@ package infrastructure.repositories
 import javax.inject.{Inject, Singleton}
 
 import domain.model.User
+import domain.services.interfaces.GamesUsersRepository
 import infrastructure.repositories.utils.DbioMonadImplicits
-import org.virtuslab.unicorn.LongUnicornPlayJDBC
+import org.virtuslab.unicorn.UnicornPlay
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
 
-trait GameUsersRepositoryComponent extends GameBaseRepositoryComponent with UserBaseRepositoryComponent {
+trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with UsersBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
@@ -23,7 +24,7 @@ trait GameUsersRepositoryComponent extends GameBaseRepositoryComponent with User
     //constraints
     def game = foreignKey("game_fk", gameId, GamesTable)(_.id)
 
-    def user = foreignKey("user_fk", userId, UserTable)(_.id)
+    def user = foreignKey("user_fk", userId, UsersTable)(_.id)
 
     def pk = primaryKey("games_users_pk", (gameId, userId))
 
@@ -39,8 +40,9 @@ trait GameUsersRepositoryComponent extends GameBaseRepositoryComponent with User
 }
 
 @Singleton()
-class GamesUsersRepository @Inject()(val unicorn: LongUnicornPlayJDBC, usersRepository: UsersRepository)
+class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long], usersRepository: UsersRepositoryImpl)(implicit executionContext: ExecutionContext)
   extends GameUsersRepositoryComponent
+  with GamesUsersRepository[DBIO]
     with DbioMonadImplicits {
 
   val gamesUsersJunctionRepository = new GamesUsersJunctionRepository
@@ -49,8 +51,12 @@ class GamesUsersRepository @Inject()(val unicorn: LongUnicornPlayJDBC, usersRepo
     gamesUsersJunctionRepository.deleteForA(gameId)
   }
 
-  def findAllUsersByGameId(gameId: GameId)(implicit executionContext: ExecutionContext): DBIO[Seq[User]] = {
+  def findPlayersByGameId(gameId: GameId): DBIO[Seq[User]] = {
     gamesUsersJunctionRepository.forA(gameId)
       .flatMapInner(user => usersRepository.findExistingByUserId(user))
+  }
+
+  def findAll(): DBIO[Seq[(GameId, UserId)]] = {
+    gamesUsersJunctionRepository.findAll()
   }
 }

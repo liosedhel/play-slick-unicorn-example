@@ -3,10 +3,14 @@ package controllers
 import javax.inject._
 
 import akka.actor.ActorSystem
-import infrastructure.repositories.{GameId, GameRepository, TeamRepository}
-import org.virtuslab.unicorn.LongUnicornPlayJDBC
+import infrastructure.repositories.utils.DbioMonadImplicits
+import infrastructure.repositories.{GameId, TeamRepository}
+import org.virtuslab.unicorn.UnicornPlay
 import play.api.libs.json.Json
 import play.api.mvc._
+import domain.services.StatisticsService
+import domain.services.interfaces.GamesRepository
+import slick.dbio.DBIO
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -23,10 +27,11 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
  */
 @Singleton
 class AsyncController @Inject()(actorSystem: ActorSystem,
-                                unicorn: LongUnicornPlayJDBC,
-                                gameRepository: GameRepository,
-                               teamsRepository: TeamRepository
-                               )(implicit exec: ExecutionContext) extends Controller {
+                                unicorn: UnicornPlay[Long],
+                                teamsRepository: TeamRepository,
+                                gameRepository: GamesRepository[DBIO],
+                                statisticsService: StatisticsService[DBIO]
+)(implicit exec: ExecutionContext) extends Controller with DbioMonadImplicits {
 
   /**
    * Create an Action that returns a plain text message after a delay
@@ -57,7 +62,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
 
   def doTransactionalOperation(gameId1: GameId, gameId2: GameId) = Action.async {
     unicorn.db.run{
-        DBIO.seq(gameRepository.deleteGame(gameId1), gameRepository.deleteGame(gameId2)).transactionally
+      slick.dbio.DBIO.seq(gameRepository.deleteGame(gameId1), gameRepository.deleteGame(gameId2)).transactionally
     }.map(_ => Ok)
   }
 
@@ -65,6 +70,18 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
     unicorn.db.run{
       teamsRepository.findAll().map(teams => Ok(Json.toJson(teams)))
     }
+  }
+
+  def countGameParticipants(gameId: GameId) = Action.async {
+    unicorn.db.run {
+      statisticsService.countGameParticipants(gameId)
+    }.map(count => Ok(Json.toJson(count)))
+  }
+
+  def averageNumberOfPlayersPerGame() = Action.async{
+    unicorn.db.run {
+      statisticsService.averageNumberOfPlayersPerGame()
+    }.map(average => Ok(Json.toJson(average)))
   }
 
 }
