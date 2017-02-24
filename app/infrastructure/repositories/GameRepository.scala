@@ -19,7 +19,6 @@ object GameId extends IdCompanion[GameId]
 case class GameRow(id: Option[GameId], organizerId: UserId, note: String, date: DateTime, placeId: PlaceId) extends WithId[Long, GameId]
 
 trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with PlaceBaseRepositoryComponent {
-  self: UnicornWrapper[Long] =>
 
   import unicorn._
   import unicorn.driver.api._
@@ -44,8 +43,6 @@ trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with Place
 
   GamesTable.schema.createStatements.foreach(println)
 
-  val gameBaseIdRepository = new GameBaseIdRepository
-
   class GameBaseIdRepository extends BaseIdRepository[GameId, GameRow, Games](GamesTable) {
 
     //Just and example how easily you can make join queries
@@ -64,12 +61,13 @@ trait GameBaseRepositoryComponent extends UserBaseRepositoryComponent with Place
 @Singleton
 class GameRepository @Inject()(val unicorn: LongUnicornPlayJDBC,
                                usersRepository: UsersRepository,
-                               placeRepository: PlaceRepository)(implicit executionContext: ExecutionContext)
-  extends UnicornWrapper[Long]
-    with GameBaseRepositoryComponent
+                               placeRepository: PlaceRepository)
+    extends GameBaseRepositoryComponent
     with DbioMonadImplicits {
 
-  def findByGameId(gameId: GameId): OptionT[DBIO, Game] = {
+  val gameBaseIdRepository = new GameBaseIdRepository
+
+  def findByGameId(gameId: GameId)(implicit executionContext: ExecutionContext): OptionT[DBIO, Game] = {
     OptionT(gameBaseIdRepository.findById(gameId)).flatMap(toDomain)
 
   }
@@ -81,7 +79,7 @@ class GameRepository @Inject()(val unicorn: LongUnicornPlayJDBC,
   /**
     * Translate Row to the full domain object
     */
-  private def toDomain(gameRow: GameRow): OptionT[DBIO, Game] = {
+  private def toDomain(gameRow: GameRow)(implicit executionContext: ExecutionContext): OptionT[DBIO, Game] = {
     for {
       organizer <- usersRepository.findByUserId(gameRow.organizerId)
       place <- placeRepository.findByPlaceId(gameRow.placeId)

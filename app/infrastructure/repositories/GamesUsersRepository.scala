@@ -1,18 +1,20 @@
 package infrastructure.repositories
 
+import javax.inject.{Inject, Singleton}
+
+import domain.model.User
 import infrastructure.repositories.utils.DbioMonadImplicits
-import org.virtuslab.unicorn.{UnicornPlay, UnicornWrapper}
+import org.virtuslab.unicorn.LongUnicornPlayJDBC
+import slick.dbio.DBIO
+
+import scala.concurrent.ExecutionContext
 
 
-trait GameUsersRepositoryComponent
-  extends UnicornWrapper[Long]
-  with GameBaseRepositoryComponent with UserBaseRepositoryComponent {
+trait GameUsersRepositoryComponent extends GameBaseRepositoryComponent with UserBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
- /* implicit val a = new BaseColumnType[GameId]{
 
-  }*/
   class GamesUsers(tag: Tag) extends JunctionTable[GameId, UserId](tag, "games_users") {
     //columns
     def gameId = column[GameId]("game_id")
@@ -30,18 +32,25 @@ trait GameUsersRepositoryComponent
 
   val GamesUsersTable = TableQuery[GamesUsers]
 
+  class GamesUsersJunctionRepository extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable)
+
   GamesUsersTable.schema.createStatements.foreach(println)
 
-  val gamesUsersJunctionRepository = new JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable)
 }
 
-class GamesUsersRepository(val unicorn: UnicornPlay[Long])
+@Singleton()
+class GamesUsersRepository @Inject()(val unicorn: LongUnicornPlayJDBC, usersRepository: UsersRepository)
   extends GameUsersRepositoryComponent
     with DbioMonadImplicits {
 
-  import unicorn.driver.api._
+  val gamesUsersJunctionRepository = new GamesUsersJunctionRepository
 
   def deleteByGameId(gameId: GameId): DBIO[Int] = {
-    gamesUsersJunctionRepository.deleteForA(gameId).transactionally
+    gamesUsersJunctionRepository.deleteForA(gameId)
+  }
+
+  def findAllUsersByGameId(gameId: GameId)(implicit executionContext: ExecutionContext): DBIO[Seq[User]] = {
+    gamesUsersJunctionRepository.forA(gameId)
+      .flatMapInner(user => usersRepository.findExistingByUserId(user))
   }
 }

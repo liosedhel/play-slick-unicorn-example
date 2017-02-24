@@ -19,8 +19,9 @@ object UserId extends IdCompanion[UserId]
 
 case class UserRow(id: Option[UserId], email: String, firstName: String, lastName: String) extends WithId[Long, UserId]
 
-trait UserBaseRepositoryComponent extends UnicornWrapper[Long] {
+trait UserBaseRepositoryComponent {
 
+  protected val unicorn: Unicorn[Long] with HasJdbcDriver
   import unicorn._
   import unicorn.driver.api._
 
@@ -38,19 +39,25 @@ trait UserBaseRepositoryComponent extends UnicornWrapper[Long] {
   UserTable.schema.createStatements.foreach(println)
 
   class UserBaseIdRepository extends BaseIdRepository[UserId, UserRow, Users](UserTable)
-  val userBaseIdRepository = new UserBaseIdRepository
+
 
 }
 
 @Singleton
 class UsersRepository @Inject() (val unicorn: LongUnicornPlayJDBC) extends UserBaseRepositoryComponent with DbioMonadImplicits{
 
-    def findByUserId(userId: UserId): OptionT[DBIO, User] = {
+  val userBaseIdRepository = new UserBaseIdRepository
+
+  def findByUserId(userId: UserId)(implicit executionContext: ExecutionContext): OptionT[DBIO, User] = {
       OptionT(userBaseIdRepository.findById(userId)).map(toDomain)
     }
 
-    def toDomain(userRow: UserRow): User = {
-      import userRow._
-      User(userRow.id, firstName)
-    }
+  def findExistingByUserId(userId: UserId)(implicit executionContext: ExecutionContext): DBIO[User] = {
+    userBaseIdRepository.findExistingById(userId).map(toDomain _)
+  }
+
+  private def toDomain(userRow: UserRow): User = {
+    import userRow._
+    User(userRow.id, firstName)
+  }
 }

@@ -6,16 +6,16 @@ import cats.data.OptionT
 import domain.model.Place
 import infrastructure.repositories.utils.DbioMonadImplicits
 import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
-import org.virtuslab.unicorn.{BaseId, LongUnicornPlayJDBC, UnicornWrapper, WithId}
-import slick.dbio.DBIO
+import org.virtuslab.unicorn._
 
 case class PlaceId(id: Long) extends BaseId[Long]
 object PlaceId extends IdCompanion[PlaceId]
 
 case class PlaceRow(id: Option[PlaceId], name: String) extends WithId[Long, PlaceId]
 
-trait PlaceBaseRepositoryComponent extends UnicornWrapper[Long]{
+trait PlaceBaseRepositoryComponent {
 
+  protected val unicorn: Unicorn[Long] with HasJdbcDriver
   import unicorn._
   import unicorn.driver.api._
 
@@ -29,14 +29,18 @@ trait PlaceBaseRepositoryComponent extends UnicornWrapper[Long]{
 
   PlaceTable.schema.createStatements.foreach(println)
 
-  val placeBaseIdRepository = new BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
+  class PlaceBaseIdRepository extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
 
 }
 
 @Singleton
-class PlaceRepository @Inject()(val unicorn: LongUnicornPlayJDBC) extends PlaceBaseRepositoryComponent with DbioMonadImplicits {
+class PlaceRepository @Inject()(val unicorn: LongUnicornPlayJDBC)
+    extends PlaceBaseRepositoryComponent
+    with DbioMonadImplicits {
 
-  def findByPlaceId(placeId: PlaceId): OptionT[DBIO, Place] = {
+  val placeBaseIdRepository = new PlaceBaseIdRepository
+
+  def findByPlaceId(placeId: PlaceId): OptionT[slick.dbio.DBIO, Place] = {
     OptionT(placeBaseIdRepository.findById(placeId)).map(toDomain)
   }
 

@@ -3,7 +3,7 @@ package controllers
 import javax.inject._
 
 import akka.actor.ActorSystem
-import infrastructure.repositories.{GameId, GameRepository}
+import infrastructure.repositories.{GameId, GameRepository, TeamRepository}
 import org.virtuslab.unicorn.LongUnicornPlayJDBC
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -24,7 +24,8 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 @Singleton
 class AsyncController @Inject()(actorSystem: ActorSystem,
                                 unicorn: LongUnicornPlayJDBC,
-                                gameRepository: GameRepository
+                                gameRepository: GameRepository,
+                               teamsRepository: TeamRepository
                                )(implicit exec: ExecutionContext) extends Controller {
 
   /**
@@ -45,9 +46,9 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
     promise.future
   }
 
-  def getGame(gameId: Long) = Action.async{
+  def getGame(gameId: GameId) = Action.async{
     unicorn.db.run(
-      gameRepository.findByGameId(GameId(gameId)).value
+      gameRepository.findByGameId(gameId).value
     ).map(game => Ok(Json.toJson(game)))
   }
 
@@ -58,6 +59,12 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
     unicorn.db.run{
         DBIO.seq(gameRepository.deleteGame(gameId1), gameRepository.deleteGame(gameId2)).transactionally
     }.map(_ => Ok)
+  }
+
+  def getTeams() = Action.async {
+    unicorn.db.run{
+      teamsRepository.findAll().map(teams => Ok(Json.toJson(teams)))
+    }
   }
 
 }
