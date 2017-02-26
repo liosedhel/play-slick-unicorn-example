@@ -3,7 +3,7 @@ package controllers
 import javax.inject._
 
 import akka.actor.ActorSystem
-import infrastructure.repositories.utils.DbioMonadImplicits
+import infrastructure.repositories.utils.{ActionConversionImplicits, DbioMonadImplicits}
 import infrastructure.repositories.{GameId, TeamRepository}
 import org.virtuslab.unicorn.UnicornPlay
 import play.api.libs.json.Json
@@ -31,7 +31,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
                                 teamsRepository: TeamRepository,
                                 gameRepository: GamesRepository[DBIO],
                                 statisticsService: StatisticsService[DBIO]
-)(implicit exec: ExecutionContext) extends Controller with DbioMonadImplicits {
+)(implicit exec: ExecutionContext) extends Controller with ActionConversionImplicits {
 
   /**
    * Create an Action that returns a plain text message after a delay
@@ -60,9 +60,13 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
 
   import unicorn.driver.api._
 
-  def doTransactionalOperation(gameId1: GameId, gameId2: GameId) = Action.async {
+  def doTransactionalOperations(gameId1: GameId,
+                               gameId2: GameId) = Action.async {
     unicorn.db.run{
-      slick.dbio.DBIO.seq(gameRepository.deleteGame(gameId1), gameRepository.deleteGame(gameId2)).transactionally
+      slick.dbio.DBIO.seq(
+        gameRepository.deleteGame(gameId1),
+        gameRepository.deleteGame(gameId2)
+      ).transactionally
     }.map(_ => Ok)
   }
 
@@ -80,7 +84,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
 
   def averageNumberOfPlayersPerGame() = Action.async{
     unicorn.db.run {
-      statisticsService.averageNumberOfPlayersPerGame()
+      statisticsService.rootMeanSquareOfPlayersPerGame()
     }.map(average => Ok(Json.toJson(average)))
   }
 

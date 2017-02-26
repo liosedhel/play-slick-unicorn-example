@@ -1,26 +1,22 @@
 
-import org.scalatest._
-import domain.model.services.StatisticsService
 import cats.Id
 import domain.services.StatisticsService
 import domain.services.interfaces.GamesUsersRepository
-import infrastructure.repositories.{GameId, UserId}
+import infrastructure.repositories.GameId
 import org.scalamock.scalatest.MockFactory
+import org.scalatest._
 
 class StatisticsServiceTest extends FlatSpec with Matchers with GivenWhenThen with MockFactory{
 
   "Statistics service" should
-    "compute proper average number players per game" in new Fixture {
+    "compute mean square number of players per game" in new Fixture {
       Given("statistic service with some repository mock")
-      val gamesAndUsers = Seq((GameId(1), UserId(1)),
-        (GameId(2), UserId(1)),
-        (GameId(2), UserId(2)),
-        (GameId(2), UserId(3))
-      )
-      (gamesUsersRepositoryMock.findAll _).expects().returning(gamesAndUsers)
+      val gamesAndParticipants = Seq((GameId(1), 2), (GameId(2), 2))
 
-      When("calculating the average")
-      val averageNumberOfPlayersPerGame = statisticService.averageNumberOfPlayersPerGame()
+      (gamesUsersRepositoryMock.findGamesAndParticipantsNumber _).expects().returning(gamesAndParticipants)
+
+      When("calculating the root mean square")
+      val averageNumberOfPlayersPerGame = statisticService.rootMeanSquareOfPlayersPerGame()
 
       Then("average must be calculated properly")
       averageNumberOfPlayersPerGame shouldBe 2

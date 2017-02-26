@@ -10,20 +10,21 @@ import infrastructure.repositories.GameId
 import scala.language.higherKinds
 
 @Singleton
-class StatisticsService[F[_]] @Inject()(gamesUsersRepository: GamesUsersRepository[F]) {
+class StatisticsService[F[_]: Monad] @Inject()(gamesUsersRepository: GamesUsersRepository[F]) {
 
-  def countGameParticipants(gameId: GameId)(implicit f: Monad[F]): F[Long] = {
+  def countGameParticipants(gameId: GameId): F[Long] = {
     for {
       players <- gamesUsersRepository.findPlayersByGameId(gameId)
     } yield players.size
   }
 
-  def averageNumberOfPlayersPerGame()(implicit f: Monad[F]): F[Double] = {
+  def rootMeanSquareOfPlayersPerGame(): F[Double] = {
     for {
-      gamesAndUsers <- gamesUsersRepository.findAll()
+      gamesAndParticipants <- gamesUsersRepository.findGamesAndParticipantsNumber()
     } yield {
-      val games = gamesAndUsers.groupBy(_._1).map(_._2.size)
-      if(games.isEmpty) 0 else games.sum / games.size
+      val numberOfGames = gamesAndParticipants.size
+      val nominator = gamesAndParticipants.map{case (_, p) => p * p}.sum
+      if(numberOfGames <= 0) 0 else Math.sqrt(nominator / numberOfGames)
     }
   }
 }

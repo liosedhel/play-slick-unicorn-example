@@ -33,14 +33,20 @@ trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with Use
 
   val GamesUsersTable = TableQuery[GamesUsers]
 
-  class GamesUsersJunctionRepository extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable)
+  class GamesUsersJunctionRepository extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable) {
+    def findGamesAndParticipantNumber(): slick.dbio.DBIO[Seq[(GameId, Int)]] = GamesUsersTable.groupBy(_.gameId).map {
+      case (gameId, group) => (gameId, group.size)
+    }.result
+  }
 
   GamesUsersTable.schema.createStatements.foreach(println)
 
 }
 
 @Singleton()
-class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long], usersRepository: UsersRepositoryImpl)(implicit executionContext: ExecutionContext)
+class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
+                                         usersRepository: UsersRepositoryImpl)
+                                        (implicit executionContext: ExecutionContext)
   extends GameUsersRepositoryComponent
   with GamesUsersRepository[DBIO]
     with DbioMonadImplicits {
@@ -58,5 +64,9 @@ class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long], usersRe
 
   def findAll(): DBIO[Seq[(GameId, UserId)]] = {
     gamesUsersJunctionRepository.findAll()
+  }
+
+  def findGamesAndParticipantsNumber(): DBIO[Seq[(GameId, Int)]] = {
+    gamesUsersJunctionRepository.findGamesAndParticipantNumber()
   }
 }
