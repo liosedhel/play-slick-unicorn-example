@@ -31,7 +31,7 @@ trait PlacesBaseRepositoryComponent {
 
   PlaceTable.schema.createStatements.foreach(println)
 
-  class PlaceBaseIdRepository extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
+  class PlacesDao extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
 
 }
 
@@ -41,10 +41,10 @@ class PlacesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
     with PlacesBaseRepositoryComponent
     with DbioMonadImplicits {
 
-  val placeBaseIdRepository = new PlaceBaseIdRepository
+  val placesDao = new PlacesDao
 
   def findByPlaceId(placeId: PlaceId): OptionT[DBIO, Place] = {
-    OptionT(placeBaseIdRepository.findById(placeId)).map(toDomain)
+    OptionT(placesDao.findById(placeId)).map(toDomain)
   }
 
   def toDomain(placeRow: PlaceRow): Place = {

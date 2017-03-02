@@ -54,7 +54,7 @@ trait TeamRepositoryComponent extends UsersBaseRepositoryComponent {
 
   val TeamsTable = TableQuery[TeamsTable]
 
-  class TeamsBaseIdRepository extends BaseIdRepository[TeamId, TeamRow, TeamsTable](TeamsTable)
+  class TeamsDao extends BaseIdRepository[TeamId, TeamRow, TeamsTable](TeamsTable)
 
   TeamsTable.schema.createStatements.foreach(println)
 }
@@ -67,10 +67,10 @@ class TeamRepository @Inject()(val unicorn: UnicornPlay[Long],
   with DbioMonadImplicits
    {
 
-     val teamsBaseIdRepository = new TeamsBaseIdRepository
+     val teamsDao = new TeamsDao
 
      def findAll()(implicit executionContext: ExecutionContext): DBIO[Seq[Team]] = {
-       teamsBaseIdRepository.findAll().flatMapInner(toDomain)
+       teamsDao.findAll().flatMapInner(toDomain)
     }
 
      def toDomain(teamRow: TeamRow)(implicit executionContext: ExecutionContext): DBIO[Team] = {

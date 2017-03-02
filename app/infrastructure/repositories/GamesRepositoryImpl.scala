@@ -47,7 +47,7 @@ trait GamesBaseRepositoryComponent
 
   GamesTable.schema.createStatements.foreach(println)
 
-  class GameBaseIdRepository extends BaseIdRepository[GameId, GameRow, GamesTable](GamesTable) {
+  class GamesDao extends BaseIdRepository[GameId, GameRow, GamesTable](GamesTable) {
 
     //Just and example how easily you can make join queries
     def findGameAndOrganizerAndPlace(gameId: GameId): slick.dbio.DBIO[Option[(GameRow, UserRow, PlaceRow)]] = {
@@ -70,15 +70,15 @@ class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
     with GamesRepository[DBIO]
     with DbioMonadImplicits {
 
-  val gameBaseIdRepository = new GameBaseIdRepository
+  val gamesDao = new GamesDao
 
   def findByGameId(gameId: GameId): OptionT[DBIO, Game] = {
-    OptionT(gameBaseIdRepository.findById(gameId)).flatMap(toDomain)
+    OptionT(gamesDao.findById(gameId)).flatMap(toDomain)
 
   }
 
   def deleteGame(gameId: GameId): DBIO[Int] = {
-    gameBaseIdRepository.deleteById(gameId)
+    gamesDao.deleteById(gameId)
   }
 
   /**

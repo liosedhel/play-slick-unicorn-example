@@ -39,7 +39,7 @@ trait UsersBaseRepositoryComponent {
 
   UsersTable.schema.createStatements.foreach(println)
 
-  class UsersBaseIdRepository extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
+  class UsersDao extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
 
 
 }
@@ -51,14 +51,14 @@ class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
   with UsersRepository[DBIO]
   with DbioMonadImplicits{
 
-  val userBaseIdRepository = new UsersBaseIdRepository
+  val usersDao = new UsersDao
 
   def findByUserId(userId: UserId): OptionT[DBIO, User] = {
-      OptionT(userBaseIdRepository.findById(userId)).map(toDomain)
+      OptionT(usersDao.findById(userId)).map(toDomain)
     }
 
   def findExistingByUserId(userId: UserId): DBIO[User] = {
-    userBaseIdRepository.findExistingById(userId).map(toDomain)
+    usersDao.findExistingById(userId).map(toDomain)
   }
 
   private def toDomain(userRow: UserRow): User = {
