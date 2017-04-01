@@ -1,7 +1,6 @@
 package domain.services.interfaces
 
-import domain.model.User
-import infrastructure.repositories.{GameId, UserId}
+import domain.model._
 
 import scala.language.higherKinds
 

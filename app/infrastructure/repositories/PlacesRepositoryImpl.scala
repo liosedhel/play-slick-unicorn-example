@@ -36,6 +36,9 @@ trait PlacesBaseRepositoryComponent {
 
   class PlacesDao extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
 
+  implicit def toEntity(userId: domain.model.PlaceId): PlaceId = PlaceId(userId.id)
+  implicit def toDomain(userId: PlaceId): domain.model.PlaceId = domain.model.PlaceId(userId.id)
+
 }
 
 @Singleton
@@ -51,7 +54,7 @@ class PlacesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
   }
 
   def toDomain(placeRow: PlaceRow): Place = {
-    Place(placeRow.id, placeRow.name)
+    Place(placeRow.id.get, placeRow.name)
   }
 
 

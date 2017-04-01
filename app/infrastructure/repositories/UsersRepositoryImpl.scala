@@ -1,20 +1,20 @@
 package infrastructure.repositories
 
-import javax.inject.Inject
-
-import org.virtuslab.unicorn._
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
 import domain.model.User
-import infrastructure.repositories.utils.DbioMonadImplicits
-import LongUnicornPlayIdentifiers.IdCompanion
 import domain.services.interfaces.UsersRepository
+import infrastructure.repositories.utils.DbioMonadImplicits
+import org.virtuslab.unicorn.LongUnicornPlayIdentifiers.IdCompanion
+import org.virtuslab.unicorn._
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-case class UserId(id: Long) extends BaseId[Long]
+case class UserId(id: Long) extends BaseId[Long] {
+  def toDomain = domain.model.UserId(id)
+}
 
 object UserId extends IdCompanion[UserId]
 
@@ -43,7 +43,8 @@ trait UsersBaseRepositoryComponent {
 
   class UsersDao extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
 
-
+  implicit def toEntity(userId: domain.model.UserId): UserId = UserId(userId.id)
+  implicit def toDomain(userId: UserId): domain.model.UserId = domain.model.UserId(userId.id)
 }
 
 @Singleton
@@ -55,16 +56,16 @@ class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
 
   val usersDao = new UsersDao
 
-  def findByUserId(userId: UserId): OptionT[DBIO, User] = {
+  def findByUserId(userId: domain.model.UserId): OptionT[DBIO, User] = {
       OptionT(usersDao.findById(userId)).map(toDomain)
     }
 
-  def findExistingByUserId(userId: UserId): DBIO[User] = {
+  def findExistingByUserId(userId: domain.model.UserId): DBIO[User] = {
     usersDao.findExistingById(userId).map(toDomain)
   }
 
   private def toDomain(userRow: UserRow): User = {
     import userRow._
-    User(userRow.id, firstName)
+    User(userRow.id.get, firstName)
   }
 }

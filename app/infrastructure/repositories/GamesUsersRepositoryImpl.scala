@@ -54,20 +54,21 @@ class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
 
   val gamesUsersDao = new GamesUsersDao
 
-  def deleteByGameId(gameId: GameId): DBIO[Int] = {
+  def deleteByGameId(gameId: domain.model.GameId): DBIO[Int] = {
     gamesUsersDao.deleteForA(gameId)
   }
 
-  def findPlayersByGameId(gameId: GameId): DBIO[Seq[User]] = {
+  def findPlayersByGameId(gameId: domain.model.GameId): DBIO[Seq[User]] = {
     gamesUsersDao.forA(gameId)
-      .flatMapInner(user => usersRepository.findExistingByUserId(user))
+      .flatMapInner(userId => usersRepository.findExistingByUserId(userId))
   }
 
-  def findAll(): DBIO[Seq[(GameId, UserId)]] = {
-    gamesUsersDao.findAll()
+  def findAll(): DBIO[Seq[(domain.model.GameId, domain.model.UserId)]] = {
+    gamesUsersDao.findAll().mapInner{case (gameId, userId) => (gameId.toDomain, userId.toDomain)}
   }
 
-  def findGamesAndParticipantsNumber(): DBIO[Seq[(GameId, Int)]] = {
+  def findGamesAndParticipantsNumber(): DBIO[Seq[(domain.model.GameId, Int)]] = {
     gamesUsersDao.findGamesAndParticipantNumber()
+      .mapInner{case (gameId, participantNumber) => (gameId.toDomain, participantNumber)}
   }
 }

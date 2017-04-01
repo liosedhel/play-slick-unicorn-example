@@ -1,8 +1,7 @@
 package domain.services.interfaces
 
 import cats.data.OptionT
-import domain.model.Game
-import infrastructure.repositories.GameId
+import domain.model._
 
 import scala.language.higherKinds
 

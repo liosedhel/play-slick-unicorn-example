@@ -2,7 +2,7 @@ package domain.services.interfaces
 
 import cats.data.OptionT
 import domain.model.User
-import infrastructure.repositories.UserId
+import domain.model.UserId
 
 
 trait UsersRepository[F[_]]  {

@@ -31,7 +31,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
                                 teamsRepository: TeamRepository,
                                 gameRepository: GamesRepository[DBIO],
                                 statisticsService: StatisticsService[DBIO]
-)(implicit exec: ExecutionContext) extends Controller with ActionConversionImplicits {
+)(implicit exec: ExecutionContext) extends Controller with ActionConversionImplicits with JsonFormatters{
 
   /**
    * Create an Action that returns a plain text message after a delay
@@ -53,10 +53,9 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
 
   def getGame(gameId: GameId) = Action.async{
     unicorn.db.run(
-      gameRepository.findByGameId(gameId).value
+      gameRepository.findByGameId(gameId.toDomain).value
     ).map(game => Ok(Json.toJson(game)))
   }
-
 
   import unicorn.driver.api._
 
@@ -64,8 +63,8 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
                                gameId2: GameId) = Action.async {
     unicorn.db.run{
       slick.dbio.DBIO.seq(
-        gameRepository.deleteGame(gameId1),
-        gameRepository.deleteGame(gameId2)
+        gameRepository.deleteGame(gameId1.toDomain),
+        gameRepository.deleteGame(gameId2.toDomain)
       ).transactionally
     }.map(_ => Ok)
   }
@@ -78,7 +77,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
 
   def countGameParticipants(gameId: GameId) = Action.async {
     unicorn.db.run {
-      statisticsService.countGameParticipants(gameId)
+      statisticsService.countGameParticipants(gameId.toDomain)
     }.map(count => Ok(Json.toJson(count)))
   }
 

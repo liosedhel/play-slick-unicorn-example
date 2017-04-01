@@ -4,8 +4,8 @@ import javax.inject.{Inject, Singleton}
 
 import cats.Monad
 import cats.implicits._
+import domain.model.GameId
 import domain.services.interfaces.GamesUsersRepository
-import infrastructure.repositories.GameId
 
 import scala.language.higherKinds
 

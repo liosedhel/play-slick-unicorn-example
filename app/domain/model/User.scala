@@ -1,10 +1,4 @@
 package domain.model
 
-import infrastructure.repositories.UserId
-import play.api.libs.json.Json
-
-case class User(userId: Option[UserId], firstName: String)
-
-object User {
-  implicit val format = Json.format[User]
-}
+case class UserId(id: Long) extends DomainId[Long]
+case class User(userId: UserId, firstName: String)

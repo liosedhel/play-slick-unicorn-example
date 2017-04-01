@@ -3,6 +3,7 @@ package infrastructure.repositories
 import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
+import domain.model
 import domain.model.Game
 import infrastructure.repositories.utils.DbioMonadImplicits
 import org.joda.time.DateTime
@@ -13,7 +14,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-case class GameId(id: Long) extends AnyVal with BaseId[Long]
+case class GameId(id: Long) extends AnyVal with BaseId[Long] {
+  def toDomain = domain.model.GameId(id)
+}
 
 object GameId extends IdCompanion[GameId]
 
@@ -62,6 +65,9 @@ trait GamesBaseRepositoryComponent
 
   }
 
+  implicit def toEntity(userId: domain.model.GameId): GameId = GameId(userId.id)
+  implicit def toDomain(userId: GameId): domain.model.GameId = domain.model.GameId(userId.id)
+
 }
 
 @Singleton
@@ -74,12 +80,12 @@ class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
 
   val gamesDao = new GamesDao
 
-  def findByGameId(gameId: GameId): OptionT[DBIO, Game] = {
+  def findByGameId(gameId: domain.model.GameId): OptionT[DBIO, Game] = {
     OptionT(gamesDao.findById(gameId)).flatMap(toDomain)
 
   }
 
-  def deleteGame(gameId: GameId): DBIO[Int] = {
+  def deleteGame(gameId: domain.model.GameId): DBIO[Int] = {
     gamesDao.deleteById(gameId)
   }
 
@@ -90,7 +96,7 @@ class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
     for {
       organizer <- usersRepository.findByUserId(gameRow.organizerId)
       place <- placeRepository.findByPlaceId(gameRow.placeId)
-    } yield Game(gameRow.id, organizer, gameRow.note, gameRow.date, place)
+    } yield Game(gameRow.id.get, organizer, gameRow.note, gameRow.date, place)
   }
 
 }

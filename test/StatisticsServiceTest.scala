@@ -2,7 +2,7 @@
 import cats.Id
 import domain.services.StatisticsService
 import domain.services.interfaces.GamesUsersRepository
-import infrastructure.repositories.GameId
+import domain.model.GameId
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 
