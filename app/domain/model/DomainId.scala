@@ -1,5 +1,5 @@
 package domain.model
 
-trait DomainId[U]{
+trait DomainId[U] {
   val id: U
 }

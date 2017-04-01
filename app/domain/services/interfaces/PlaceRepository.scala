@@ -6,7 +6,6 @@ import infrastructure.repositories.PlaceId
 
 import scala.language.higherKinds
 
-
-trait PlaceRepository[F[_]]  {
+trait PlaceRepository[F[_]] {
   def findByPlaceId(placeId: PlaceId): OptionT[F, Place]
 }

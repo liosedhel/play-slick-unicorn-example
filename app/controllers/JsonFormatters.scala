@@ -5,12 +5,14 @@ import play.api.libs.json._
 
 trait JsonFormatters {
 
-  class DomainIdFormat[U, DId <: DomainId[U]](apply: U => DId)(implicit val format: Format[U]) extends Format[DId] {
+  class DomainIdFormat[U, DId <: DomainId[U]](apply: U => DId)(
+      implicit val format: Format[U])
+      extends Format[DId] {
     override def writes(o: DId): JsValue = format.writes(o.id)
 
-    override def reads(json: JsValue): JsResult[DId] = format.reads(json).map(apply)
+    override def reads(json: JsValue): JsResult[DId] =
+      format.reads(json).map(apply)
   }
-
 
   implicit lazy val userIdFormat = new DomainIdFormat[Long, UserId](UserId)
   implicit lazy val userFormat = Json.format[User]
@@ -23,6 +25,5 @@ trait JsonFormatters {
 
   implicit lazy val gameIdFormat = new DomainIdFormat[Long, GameId](GameId)
   implicit lazy val gameFormat = Json.format[Game]
-
 
 }

@@ -27,7 +27,3 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % Test
 
 // https://mvnrepository.com/artifact/org.scalamock/scalamock-scalatest-support_2.11
 libraryDependencies += "org.scalamock" % "scalamock-scalatest-support_2.11" % "3.2.2" % Test
-
-
-
-

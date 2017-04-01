@@ -15,4 +15,6 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.1")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.1.0")
 
+addSbtPlugin("com.geirsson" % "sbt-scalafmt" % "0.6.3")
+
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.6")

@@ -10,13 +10,15 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-
-trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with UsersBaseRepositoryComponent {
+trait GameUsersRepositoryComponent
+    extends GamesBaseRepositoryComponent
+    with UsersBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
 
-  class GamesUsers(tag: Tag) extends JunctionTable[GameId, UserId](tag, "GAMES_USERS") {
+  class GamesUsers(tag: Tag)
+      extends JunctionTable[GameId, UserId](tag, "GAMES_USERS") {
 
     //columns
     def gameId = column[GameId]("GAME_ID")
@@ -34,10 +36,15 @@ trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with Use
 
   val GamesUsersTable = TableQuery[GamesUsers]
 
-  class GamesUsersDao extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable) {
-    def findGamesAndParticipantNumber(): slick.dbio.DBIO[Seq[(GameId, Int)]] = GamesUsersTable.groupBy(_.gameId).map {
-      case (gameId, group) => (gameId, group.size)
-    }.result
+  class GamesUsersDao
+      extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable) {
+    def findGamesAndParticipantNumber(): slick.dbio.DBIO[Seq[(GameId, Int)]] =
+      GamesUsersTable
+        .groupBy(_.gameId)
+        .map {
+          case (gameId, group) => (gameId, group.size)
+        }
+        .result
   }
 
   GamesUsersTable.schema.createStatements.foreach(println)
@@ -46,10 +53,10 @@ trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with Use
 
 @Singleton()
 class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
-                                         usersRepository: UsersRepositoryImpl)
-                                        (implicit executionContext: ExecutionContext)
-  extends GameUsersRepositoryComponent
-  with GamesUsersRepository[DBIO]
+                                         usersRepository: UsersRepositoryImpl)(
+    implicit executionContext: ExecutionContext)
+    extends GameUsersRepositoryComponent
+    with GamesUsersRepository[DBIO]
     with DbioMonadImplicits {
 
   val gamesUsersDao = new GamesUsersDao
@@ -59,16 +66,24 @@ class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
   }
 
   def findPlayersByGameId(gameId: domain.model.GameId): DBIO[Seq[User]] = {
-    gamesUsersDao.forA(gameId)
+    gamesUsersDao
+      .forA(gameId)
       .flatMapInner(userId => usersRepository.findExistingByUserId(userId))
   }
 
   def findAll(): DBIO[Seq[(domain.model.GameId, domain.model.UserId)]] = {
-    gamesUsersDao.findAll().mapInner{case (gameId, userId) => (gameId.toDomain, userId.toDomain)}
+    gamesUsersDao.findAll().mapInner {
+      case (gameId, userId) => (gameId.toDomain, userId.toDomain)
+    }
   }
 
-  def findGamesAndParticipantsNumber(): DBIO[Seq[(domain.model.GameId, Int)]] = {
-    gamesUsersDao.findGamesAndParticipantNumber()
-      .mapInner{case (gameId, participantNumber) => (gameId.toDomain, participantNumber)}
+  def findGamesAndParticipantsNumber()
+    : DBIO[Seq[(domain.model.GameId, Int)]] = {
+    gamesUsersDao
+      .findGamesAndParticipantNumber()
+      .mapInner {
+        case (gameId, participantNumber) =>
+          (gameId.toDomain, participantNumber)
+      }
   }
 }

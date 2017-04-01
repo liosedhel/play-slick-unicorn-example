@@ -18,7 +18,11 @@ case class UserId(id: Long) extends BaseId[Long] {
 
 object UserId extends IdCompanion[UserId]
 
-case class UserRow(id: Option[UserId], email: String, firstName: String, lastName: String) extends WithId[Long, UserId]
+case class UserRow(id: Option[UserId],
+                   email: String,
+                   firstName: String,
+                   lastName: String)
+    extends WithId[Long, UserId]
 
 trait UsersBaseRepositoryComponent {
 
@@ -34,31 +38,35 @@ trait UsersBaseRepositoryComponent {
     def firstName = column[String]("FIRST_NAME")
     def lastName = column[String]("LAST_NAME")
 
-    override def * = (id.?, email, firstName, lastName) <> (UserRow.tupled, UserRow.unapply)
+    override def * =
+      (id.?, email, firstName, lastName) <> (UserRow.tupled, UserRow.unapply)
   }
 
   val UsersTable = TableQuery[UsersTable]
 
   UsersTable.schema.createStatements.foreach(println)
 
-  class UsersDao extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
+  class UsersDao
+      extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
 
-  implicit def toEntity(userId: domain.model.UserId): UserId = UserId(userId.id)
-  implicit def toDomain(userId: UserId): domain.model.UserId = domain.model.UserId(userId.id)
+  implicit def toEntity(userId: domain.model.UserId): UserId =
+    UserId(userId.id)
+  implicit def toDomain(userId: UserId): domain.model.UserId =
+    domain.model.UserId(userId.id)
 }
 
 @Singleton
-class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])
-                                   (implicit ec: ExecutionContext)
-  extends UsersBaseRepositoryComponent
-  with UsersRepository[DBIO]
-  with DbioMonadImplicits{
+class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])(
+    implicit ec: ExecutionContext)
+    extends UsersBaseRepositoryComponent
+    with UsersRepository[DBIO]
+    with DbioMonadImplicits {
 
   val usersDao = new UsersDao
 
   def findByUserId(userId: domain.model.UserId): OptionT[DBIO, User] = {
-      OptionT(usersDao.findById(userId)).map(toDomain)
-    }
+    OptionT(usersDao.findById(userId)).map(toDomain)
+  }
 
   def findExistingByUserId(userId: domain.model.UserId): DBIO[User] = {
     usersDao.findExistingById(userId).map(toDomain)

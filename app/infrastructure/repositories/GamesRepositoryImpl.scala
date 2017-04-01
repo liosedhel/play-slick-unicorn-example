@@ -20,16 +20,21 @@ case class GameId(id: Long) extends AnyVal with BaseId[Long] {
 
 object GameId extends IdCompanion[GameId]
 
-case class GameRow(id: Option[GameId], organizerId: UserId, note: String, date: DateTime, placeId: PlaceId) extends WithId[Long, GameId]
+case class GameRow(id: Option[GameId],
+                   organizerId: UserId,
+                   note: String,
+                   date: DateTime,
+                   placeId: PlaceId)
+    extends WithId[Long, GameId]
 
 trait GamesBaseRepositoryComponent
-  extends UsersBaseRepositoryComponent
-  with PlacesBaseRepositoryComponent {
+    extends UsersBaseRepositoryComponent
+    with PlacesBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
 
-  class GamesTable(tag: Tag) extends IdTable[GameId, GameRow](tag, "GAMES"){
+  class GamesTable(tag: Tag) extends IdTable[GameId, GameRow](tag, "GAMES") {
 
     override protected val idColumnName: String = "ID"
 
@@ -45,17 +50,20 @@ trait GamesBaseRepositoryComponent
 
     def place = foreignKey("PLACE_FK", placeId, PlaceTable)(_.id)
 
-    override def *  = (id.?, organizerId, note, date, placeId) <> (GameRow.tupled, GameRow.unapply)
+    override def * =
+      (id.?, organizerId, note, date, placeId) <> (GameRow.tupled, GameRow.unapply)
   }
 
   val GamesTable = TableQuery[GamesTable]
 
   GamesTable.schema.createStatements.foreach(println)
 
-  class GamesDao extends BaseIdRepository[GameId, GameRow, GamesTable](GamesTable) {
+  class GamesDao
+      extends BaseIdRepository[GameId, GameRow, GamesTable](GamesTable) {
 
     //Just and example how easily you can make join queries
-    def findGameAndOrganizerAndPlace(gameId: GameId): slick.dbio.DBIO[Option[(GameRow, UserRow, PlaceRow)]] = {
+    def findGameAndOrganizerAndPlace(gameId: GameId)
+      : slick.dbio.DBIO[Option[(GameRow, UserRow, PlaceRow)]] = {
       (for {
         game <- GamesTable if game.id === gameId
         user <- game.organizer
@@ -65,15 +73,18 @@ trait GamesBaseRepositoryComponent
 
   }
 
-  implicit def toEntity(userId: domain.model.GameId): GameId = GameId(userId.id)
-  implicit def toDomain(userId: GameId): domain.model.GameId = domain.model.GameId(userId.id)
+  implicit def toEntity(userId: domain.model.GameId): GameId =
+    GameId(userId.id)
+  implicit def toDomain(userId: GameId): domain.model.GameId =
+    domain.model.GameId(userId.id)
 
 }
 
 @Singleton
 class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
                                     usersRepository: UsersRepository[DBIO],
-                                    placeRepository: PlacesRepositoryImpl)(implicit executionContext: ExecutionContext)
+                                    placeRepository: PlacesRepositoryImpl)(
+    implicit executionContext: ExecutionContext)
     extends GamesBaseRepositoryComponent
     with GamesRepository[DBIO]
     with DbioMonadImplicits {
@@ -100,5 +111,3 @@ class GamesRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
   }
 
 }
-
-

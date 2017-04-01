@@ -5,7 +5,6 @@ import domain.model._
 
 import scala.language.higherKinds
 
-
 trait GamesRepository[F[_]] {
 
   def findByGameId(gameId: GameId): OptionT[F, Game]
