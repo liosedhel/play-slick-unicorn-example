@@ -42,12 +42,14 @@ trait TeamRepositoryComponent extends UsersBaseRepositoryComponent {
   import unicornString._
   import unicornString.driver.api._
 
-  class TeamsTable(tag: Tag) extends unicornString.IdTable[TeamId, TeamRow](tag, "teams"){
+  class TeamsTable(tag: Tag) extends unicornString.IdTable[TeamId, TeamRow](tag, "TEAMS"){
 
-    def captain = column[UserId]("user_id")
-    def description = column[String]("user_id")
+    override protected val idColumnName: String = "ID"
 
-    def captainForeignKey = foreignKey("user_fk", captain, UsersTable)(_.id) //TODO also does not work, but should
+    def captain = column[UserId]("USER_ID")
+    def description = column[String]("USER_ID")
+
+    def captainForeignKey = foreignKey("USER_FK", captain, UsersTable)(_.id) //TODO also does not work, but should
 
     override def * : ProvenShape[TeamRow] = (id.?, captain, description) <> (TeamRow.tupled, TeamRow.unapply)
   }

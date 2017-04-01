@@ -21,8 +21,11 @@ trait PlacesBaseRepositoryComponent {
   import unicorn._
   import unicorn.driver.api._
 
-  class Places(tag: Tag) extends IdTable[PlaceId, PlaceRow](tag, "places") {
-    def name = column[String]("name")
+  class Places(tag: Tag) extends IdTable[PlaceId, PlaceRow](tag, "PLACES") {
+
+    override protected val idColumnName: String = "ID"
+
+    def name = column[String]("NAME")
 
     def * = (id.?, name) <> (PlaceRow.tupled, PlaceRow.unapply)
   }

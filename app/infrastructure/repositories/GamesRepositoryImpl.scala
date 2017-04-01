@@ -26,19 +26,21 @@ trait GamesBaseRepositoryComponent
   import unicorn._
   import unicorn.driver.api._
 
-  class GamesTable(tag: Tag) extends IdTable[GameId, GameRow](tag, "games"){
+  class GamesTable(tag: Tag) extends IdTable[GameId, GameRow](tag, "GAMES"){
 
-    def organizerId = column[UserId]("organizer_id")
+    override protected val idColumnName: String = "ID"
 
-    def note = column[String]("note")
+    def organizerId = column[UserId]("ORGANIZER_ID")
 
-    def date = column[DateTime]("date")
+    def note = column[String]("NOTE")
 
-    def placeId = column[PlaceId]("place_id")
+    def date = column[DateTime]("DATE")
 
-    def organizer = foreignKey("organizer_fk", organizerId, UsersTable)(_.id)
+    def placeId = column[PlaceId]("PLACE_ID")
 
-    def place = foreignKey("place_fk", placeId, PlaceTable)(_.id)
+    def organizer = foreignKey("ORGANIZER_FK", organizerId, UsersTable)(_.id)
+
+    def place = foreignKey("PLACE_FK", placeId, PlaceTable)(_.id)
 
     override def *  = (id.?, organizerId, note, date, placeId) <> (GameRow.tupled, GameRow.unapply)
   }

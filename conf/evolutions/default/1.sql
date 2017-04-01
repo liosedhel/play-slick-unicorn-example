@@ -15,7 +15,7 @@ alter table "games_users" add constraint "user_fk" foreign key("user_id") refere
 
 insert into "users" values (1, 'liosedhel@gmail.com', 'lios', 'edhel');
 insert into "places" values (1, 'Park Jordana');
-insert into "games" values (1, 1, 'first game', 'now', 1);
+insert into "games" values (1, 1, 'first game', CURRENT_TIMESTAMP(), 1);
 # --- !Downs
 
 DROP table "games_users";

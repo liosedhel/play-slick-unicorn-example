@@ -26,11 +26,13 @@ trait UsersBaseRepositoryComponent {
   import unicorn._
   import unicorn.driver.api._
 
-  class UsersTable(tag: Tag) extends IdTable[UserId, UserRow](tag, "users") {
+  class UsersTable(tag: Tag) extends IdTable[UserId, UserRow](tag, "USERS") {
 
-    def email = column[String]("email")
-    def firstName = column[String]("first_name")
-    def lastName = column[String]("last_name")
+    override protected val idColumnName: String = "ID"
+
+    def email = column[String]("EMAIL")
+    def firstName = column[String]("FIRST_NAME")
+    def lastName = column[String]("LAST_NAME")
 
     override def * = (id.?, email, firstName, lastName) <> (UserRow.tupled, UserRow.unapply)
   }

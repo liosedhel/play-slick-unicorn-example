@@ -16,17 +16,18 @@ trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with Use
   import unicorn._
   import unicorn.driver.api._
 
-  class GamesUsers(tag: Tag) extends JunctionTable[GameId, UserId](tag, "games_users") {
+  class GamesUsers(tag: Tag) extends JunctionTable[GameId, UserId](tag, "GAMES_USERS") {
+
     //columns
-    def gameId = column[GameId]("game_id")
-    def userId = column[UserId]("user_id")
+    def gameId = column[GameId]("GAME_ID")
+    def userId = column[UserId]("USER_ID")
 
     //constraints
-    def game = foreignKey("game_fk", gameId, GamesTable)(_.id)
+    def game = foreignKey("GAME_FK", gameId, GamesTable)(_.id)
 
-    def user = foreignKey("user_fk", userId, UsersTable)(_.id)
+    def user = foreignKey("USER_FK", userId, UsersTable)(_.id)
 
-    def pk = primaryKey("games_users_pk", (gameId, userId))
+    def pk = primaryKey("GAMES_USERS_PK", (gameId, userId))
 
     override def columns = gameId -> userId
   }
