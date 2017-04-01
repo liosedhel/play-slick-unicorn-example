@@ -3,10 +3,7 @@ package controllers
 import javax.inject._
 
 import akka.actor.ActorSystem
-import infrastructure.repositories.utils.{
-  ActionConversionImplicits,
-  DbioMonadImplicits
-}
+import infrastructure.repositories.utils.{ActionConversionImplicits, DbioMonadImplicits}
 import infrastructure.repositories.{GameId, TeamRepository}
 import org.virtuslab.unicorn.UnicornPlay
 import play.api.libs.json.Json
@@ -33,8 +30,7 @@ class AsyncController @Inject()(actorSystem: ActorSystem,
                                 unicorn: UnicornPlay[Long],
                                 teamsRepository: TeamRepository,
                                 gameRepository: GamesRepository[DBIO],
-                                statisticsService: StatisticsService[DBIO])(
-    implicit exec: ExecutionContext)
+                                statisticsService: StatisticsService[DBIO])(implicit exec: ExecutionContext)
     extends Controller
     with ActionConversionImplicits
     with JsonFormatters {

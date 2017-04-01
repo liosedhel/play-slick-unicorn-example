@@ -11,12 +11,7 @@ import infrastructure.repositories.{
 }
 import org.virtuslab.unicorn.{LongUnicornPlayJDBC, UnicornPlay}
 import domain.services.{ApplicationTimer, AtomicCounter, Counter}
-import domain.services.interfaces.{
-  GamesRepository,
-  GamesUsersRepository,
-  PlaceRepository,
-  UsersRepository
-}
+import domain.services.interfaces.{GamesRepository, GamesUsersRepository, PlaceRepository, UsersRepository}
 import play.api.libs.concurrent.Execution
 import slick.dbio.DBIO
 
@@ -42,7 +37,7 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
-    bind(new TypeLiteral[Monad[DBIO]]() {}).to(classOf[DbioMonadImplicits])
+    bind(new TypeLiteral[Monad[DBIO]]()           {}).to(classOf[DbioMonadImplicits])
     bind(new TypeLiteral[PlaceRepository[DBIO]]() {})
       .to(classOf[PlacesRepositoryImpl])
     bind(new TypeLiteral[UsersRepository[DBIO]]() {})

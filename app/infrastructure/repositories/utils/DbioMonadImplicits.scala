@@ -32,15 +32,13 @@ trait ActionConversionImplicits {
 
   implicit class EnhancedSeqDbio[A](action: DBIO[Seq[A]]) {
 
-    def mapInner[B](function: A => B)(
-        implicit executionContext: ExecutionContext): DBIO[Seq[B]] = {
+    def mapInner[B](function: A => B)(implicit executionContext: ExecutionContext): DBIO[Seq[B]] = {
       action.map { sequence =>
         sequence.map(function)
       }
     }
 
-    def flatMapInner[B](function: A => DBIO[B])(
-        implicit executionContext: ExecutionContext): DBIO[Seq[B]] = {
+    def flatMapInner[B](function: A => DBIO[B])(implicit executionContext: ExecutionContext): DBIO[Seq[B]] = {
       action.flatMap { sequence =>
         val sequenceOfActions = sequence.map(function)
         DBIO.sequence(sequenceOfActions)
@@ -50,15 +48,13 @@ trait ActionConversionImplicits {
 
   implicit class EnhancedSetDbio[A](action: DBIO[Set[A]]) {
 
-    def mapInner[B](function: A => B)(
-        implicit executionContext: ExecutionContext): DBIO[Set[B]] = {
+    def mapInner[B](function: A => B)(implicit executionContext: ExecutionContext): DBIO[Set[B]] = {
       action.map { sequence =>
         sequence.map(function)
       }
     }
 
-    def flatMapInner[B](function: A => DBIO[B])(
-        implicit executionContext: ExecutionContext): DBIO[Set[B]] = {
+    def flatMapInner[B](function: A => DBIO[B])(implicit executionContext: ExecutionContext): DBIO[Set[B]] = {
       action.flatMap { set =>
         val setOfActions = set.map(function)
         DBIO.sequence(setOfActions.toSeq).map(_.toSet)

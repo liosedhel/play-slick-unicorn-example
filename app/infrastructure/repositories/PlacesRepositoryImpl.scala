@@ -11,10 +11,9 @@ import org.virtuslab.unicorn._
 import slick.dbio.DBIO
 
 case class PlaceId(id: Long) extends BaseId[Long]
-object PlaceId extends IdCompanion[PlaceId]
+object PlaceId               extends IdCompanion[PlaceId]
 
-case class PlaceRow(id: Option[PlaceId], name: String)
-    extends WithId[Long, PlaceId]
+case class PlaceRow(id: Option[PlaceId], name: String) extends WithId[Long, PlaceId]
 
 trait PlacesBaseRepositoryComponent {
 
@@ -35,8 +34,7 @@ trait PlacesBaseRepositoryComponent {
 
   PlaceTable.schema.createStatements.foreach(println)
 
-  class PlacesDao
-      extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
+  class PlacesDao extends BaseIdRepository[PlaceId, PlaceRow, Places](PlaceTable)
 
   implicit def toEntity(userId: domain.model.PlaceId): PlaceId =
     PlaceId(userId.id)

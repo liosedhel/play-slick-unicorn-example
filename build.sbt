@@ -10,8 +10,8 @@ libraryDependencies += cache
 libraryDependencies += ws
 libraryDependencies += evolutions
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
-libraryDependencies += "org.virtuslab" %% "unicorn-play" % "1.1.0"
-libraryDependencies += "org.typelevel" %% "cats" % "0.9.0"
+libraryDependencies += "org.virtuslab"          %% "unicorn-play"       % "1.1.0"
+libraryDependencies += "org.typelevel"          %% "cats"               % "0.9.0"
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick-evolutions" % "2.0.2"
 )

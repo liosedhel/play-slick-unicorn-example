@@ -16,12 +16,10 @@ import slick.lifted.ProvenShape
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class StringUnicornPlay @Inject()(dbConfig: DatabaseConfig[JdbcProfile])
-    extends UnicornPlay[String](dbConfig)
+class StringUnicornPlay @Inject()(dbConfig: DatabaseConfig[JdbcProfile]) extends UnicornPlay[String](dbConfig)
 
 @Singleton()
-class StringUnicornPlayJDBC @Inject()(
-    databaseConfigProvider: DatabaseConfigProvider)
+class StringUnicornPlayJDBC @Inject()(databaseConfigProvider: DatabaseConfigProvider)
     extends StringUnicornPlay(databaseConfigProvider.get[JdbcProfile])
 
 object StringUnicornPlayIdentifiers extends PlayIdentifiersImpl[String] {
@@ -30,10 +28,9 @@ object StringUnicornPlayIdentifiers extends PlayIdentifiersImpl[String] {
 }
 
 case class TeamId(id: String) extends BaseId[String]
-object TeamId extends StringUnicornPlayIdentifiers.IdCompanion[TeamId]
+object TeamId                 extends StringUnicornPlayIdentifiers.IdCompanion[TeamId]
 
-case class TeamRow(id: Option[TeamId], captain: UserId, description: String)
-    extends WithId[String, TeamId]
+case class TeamRow(id: Option[TeamId], captain: UserId, description: String) extends WithId[String, TeamId]
 
 /**
   * Example of joining String and Long typesafe IDs
@@ -44,12 +41,11 @@ trait TeamRepositoryComponent extends UsersBaseRepositoryComponent {
   import unicornString._
   import unicornString.driver.api._
 
-  class TeamsTable(tag: Tag)
-      extends unicornString.IdTable[TeamId, TeamRow](tag, "TEAMS") {
+  class TeamsTable(tag: Tag) extends unicornString.IdTable[TeamId, TeamRow](tag, "TEAMS") {
 
     override protected val idColumnName: String = "ID"
 
-    def captain = column[UserId]("USER_ID")
+    def captain     = column[UserId]("USER_ID")
     def description = column[String]("USER_ID")
 
     def captainForeignKey =
@@ -61,8 +57,7 @@ trait TeamRepositoryComponent extends UsersBaseRepositoryComponent {
 
   val TeamsTable = TableQuery[TeamsTable]
 
-  class TeamsDao
-      extends BaseIdRepository[TeamId, TeamRow, TeamsTable](TeamsTable)
+  class TeamsDao extends BaseIdRepository[TeamId, TeamRow, TeamsTable](TeamsTable)
 
   TeamsTable.schema.createStatements.foreach(println)
   implicit def toEntity(teamId: domain.model.TeamId): TeamId =
@@ -84,8 +79,7 @@ class TeamRepository @Inject()(val unicorn: UnicornPlay[Long],
     teamsDao.findAll().flatMapInner(toDomain)
   }
 
-  def toDomain(teamRow: TeamRow)(
-      implicit executionContext: ExecutionContext): DBIO[Team] = {
+  def toDomain(teamRow: TeamRow)(implicit executionContext: ExecutionContext): DBIO[Team] = {
     usersRepository.findExistingByUserId(teamRow.captain).map { captain =>
       Team(teamRow.id.get, captain, teamRow.description)
     }

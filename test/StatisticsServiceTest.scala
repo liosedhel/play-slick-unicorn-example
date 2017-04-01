@@ -5,11 +5,7 @@ import domain.model.GameId
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 
-class StatisticsServiceTest
-    extends FlatSpec
-    with Matchers
-    with GivenWhenThen
-    with MockFactory {
+class StatisticsServiceTest extends FlatSpec with Matchers with GivenWhenThen with MockFactory {
 
   "Statistics service" should
     "compute mean square number of players per game" in new Fixture {
@@ -31,7 +27,7 @@ class StatisticsServiceTest
   trait Fixture {
 
     val gamesUsersRepositoryMock = mock[GamesUsersRepository[Id]]
-    val statisticService = new StatisticsService(gamesUsersRepositoryMock)
+    val statisticService         = new StatisticsService(gamesUsersRepositoryMock)
 
   }
 

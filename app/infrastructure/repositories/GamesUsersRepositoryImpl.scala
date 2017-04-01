@@ -10,15 +10,12 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-trait GameUsersRepositoryComponent
-    extends GamesBaseRepositoryComponent
-    with UsersBaseRepositoryComponent {
+trait GameUsersRepositoryComponent extends GamesBaseRepositoryComponent with UsersBaseRepositoryComponent {
 
   import unicorn._
   import unicorn.driver.api._
 
-  class GamesUsers(tag: Tag)
-      extends JunctionTable[GameId, UserId](tag, "GAMES_USERS") {
+  class GamesUsers(tag: Tag) extends JunctionTable[GameId, UserId](tag, "GAMES_USERS") {
 
     //columns
     def gameId = column[GameId]("GAME_ID")
@@ -36,8 +33,7 @@ trait GameUsersRepositoryComponent
 
   val GamesUsersTable = TableQuery[GamesUsers]
 
-  class GamesUsersDao
-      extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable) {
+  class GamesUsersDao extends JunctionRepository[GameId, UserId, GamesUsers](GamesUsersTable) {
     def findGamesAndParticipantNumber(): slick.dbio.DBIO[Seq[(GameId, Int)]] =
       GamesUsersTable
         .groupBy(_.gameId)
@@ -52,8 +48,7 @@ trait GameUsersRepositoryComponent
 }
 
 @Singleton()
-class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
-                                         usersRepository: UsersRepositoryImpl)(
+class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long], usersRepository: UsersRepositoryImpl)(
     implicit executionContext: ExecutionContext)
     extends GameUsersRepositoryComponent
     with GamesUsersRepository[DBIO]
@@ -77,8 +72,7 @@ class GamesUsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long],
     }
   }
 
-  def findGamesAndParticipantsNumber()
-    : DBIO[Seq[(domain.model.GameId, Int)]] = {
+  def findGamesAndParticipantsNumber(): DBIO[Seq[(domain.model.GameId, Int)]] = {
     gamesUsersDao
       .findGamesAndParticipantNumber()
       .mapInner {

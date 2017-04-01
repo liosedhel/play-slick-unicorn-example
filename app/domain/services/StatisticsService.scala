@@ -10,8 +10,7 @@ import domain.services.interfaces.GamesUsersRepository
 import scala.language.higherKinds
 
 @Singleton
-class StatisticsService[F[_]: Monad] @Inject()(
-    gamesUsersRepository: GamesUsersRepository[F]) {
+class StatisticsService[F[_]: Monad] @Inject()(gamesUsersRepository: GamesUsersRepository[F]) {
 
   def countGameParticipants(gameId: GameId): F[Long] = {
     for {
@@ -25,7 +24,7 @@ class StatisticsService[F[_]: Monad] @Inject()(
         .findGamesAndParticipantsNumber()
     } yield {
       val numberOfGames = gamesAndParticipants.size
-      val nominator = gamesAndParticipants.map { case (_, p) => p * p }.sum
+      val nominator     = gamesAndParticipants.map { case (_, p) => p * p }.sum
       if (numberOfGames <= 0) 0 else Math.sqrt(nominator / numberOfGames)
     }
   }

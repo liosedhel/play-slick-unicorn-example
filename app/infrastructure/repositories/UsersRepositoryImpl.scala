@@ -18,11 +18,7 @@ case class UserId(id: Long) extends BaseId[Long] {
 
 object UserId extends IdCompanion[UserId]
 
-case class UserRow(id: Option[UserId],
-                   email: String,
-                   firstName: String,
-                   lastName: String)
-    extends WithId[Long, UserId]
+case class UserRow(id: Option[UserId], email: String, firstName: String, lastName: String) extends WithId[Long, UserId]
 
 trait UsersBaseRepositoryComponent {
 
@@ -34,9 +30,9 @@ trait UsersBaseRepositoryComponent {
 
     override protected val idColumnName: String = "ID"
 
-    def email = column[String]("EMAIL")
+    def email     = column[String]("EMAIL")
     def firstName = column[String]("FIRST_NAME")
-    def lastName = column[String]("LAST_NAME")
+    def lastName  = column[String]("LAST_NAME")
 
     override def * =
       (id.?, email, firstName, lastName) <> (UserRow.tupled, UserRow.unapply)
@@ -46,8 +42,7 @@ trait UsersBaseRepositoryComponent {
 
   UsersTable.schema.createStatements.foreach(println)
 
-  class UsersDao
-      extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
+  class UsersDao extends BaseIdRepository[UserId, UserRow, UsersTable](UsersTable)
 
   implicit def toEntity(userId: domain.model.UserId): UserId =
     UserId(userId.id)
@@ -56,8 +51,7 @@ trait UsersBaseRepositoryComponent {
 }
 
 @Singleton
-class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])(
-    implicit ec: ExecutionContext)
+class UsersRepositoryImpl @Inject()(val unicorn: UnicornPlay[Long])(implicit ec: ExecutionContext)
     extends UsersBaseRepositoryComponent
     with UsersRepository[DBIO]
     with DbioMonadImplicits {
